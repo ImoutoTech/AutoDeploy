@@ -8,7 +8,7 @@ export default async function hello(params, context) {
   try {
     res = await axios.get(process.env.CONFIG_URL, {
       headers: {
-        origin: 'autodeploy.com',
+        origin: process.env.CONFIG_ORIGIN,
       },
     })
   } catch (e) {
@@ -18,9 +18,19 @@ export default async function hello(params, context) {
   }
 
   const { data: resData } = res
+  const projects = await aircode.db.table('projects')
+
+  // clear database
+  await projects.delete(await projects.where().find())
+
+  // update
+  const promises = []
+  resData.projects.forEach((project) => {
+    promises.push(projects.save(project))
+  })
+  await Promise.all(promises)
 
   return {
     msg: 'done',
-    data: res.data,
   }
 }
