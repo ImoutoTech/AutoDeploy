@@ -6,7 +6,8 @@ module.exports = async function (params, context) {
   const { project } = params
   const projects = await aircode.db.table('projects')
 
-  if (!project || !(await projects.where({ name: project }).find()).length) {
+  const queryResult = await projects.where({ name: project }).find()
+  if (!project || !queryResult.length) {
     return {
       msg: 'no such project',
     }
@@ -17,6 +18,18 @@ module.exports = async function (params, context) {
       msg: 'git not found',
     }
   }
+
+  new Promise((rs) => setTimeout(rs, 1))
+    .then(() => {
+      const { git, path } = queryResult[0]
+      shell.exec(`git clone ${git} ./tmp`)
+      shell.exec('pwd')
+    })
+    .finally(() => {
+      console.log('action finished')
+      shell.rm('-rf', './tmp')
+      console.log('tmp cleared')
+    })
 
   return {
     msg: 'done',
