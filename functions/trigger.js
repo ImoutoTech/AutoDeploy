@@ -1,13 +1,20 @@
 // @see https://docs.aircode.io/guide/functions/
-import aircode from 'aircode'
+const aircode = require('aircode')
+const shell = require('shelljs')
 
-export default async function hello(params, context) {
+module.exports = async function (params, context) {
   const { project } = params
   const projects = await aircode.db.table('projects')
 
   if (!project || !(await projects.where({ name: project }).find()).length) {
     return {
       msg: 'no such project',
+    }
+  }
+
+  if (!shell.which('git')) {
+    return {
+      msg: 'git not found',
     }
   }
 
