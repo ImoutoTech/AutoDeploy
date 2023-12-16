@@ -1,6 +1,8 @@
 // @see https://docs.aircode.io/guide/functions/
 const aircode = require('aircode')
 const shell = require('shelljs')
+const axios = require('axios')
+require('dotenv').config()
 
 function Logger() {
   this.logText = ''
@@ -10,6 +12,23 @@ function Logger() {
   }
 
   this.getLog = () => this.logText
+}
+
+function sendNotice(project, content, status) {
+  return axios.post(
+    `https://sctapi.ftqq.com/${process.env.SERVERCHAN_KEY}.send`,
+    {
+      channel: 9,
+      title: `项目${project}触发构建日志`,
+      short: `结果：${status}`,
+      desp: content,
+    },
+    {
+      Headers: {
+        'Content-type': 'application/json',
+      },
+    }
+  )
 }
 
 module.exports = async function (params, context) {
@@ -32,6 +51,7 @@ module.exports = async function (params, context) {
   const logger = new Logger()
   const { log } = logger
   const cmd = (line) => log(line.stderr || line.stdout)
+  let errorFlag = false
 
   new Promise((rs) => setTimeout(rs, 1))
     .then(() => {
@@ -61,14 +81,15 @@ module.exports = async function (params, context) {
     })
     .catch((error) => {
       log(`发生错误: \n${error.message}`)
+      errorFlag = true
     })
     .finally(() => {
       log('操作已完成')
       cmd(shell.exec('pwd'))
       cmd(shell.rm('-rf', './tmp'))
-      log('临时日志已清理')
+      log('临时目录已清理')
 
-      console.log('日志输出: \n', logger.getLog())
+      sendNotice(project, logger.getLog(), errorFlag ? '错误' : '成功')
     })
 
   return {
