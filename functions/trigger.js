@@ -8,7 +8,7 @@ function Logger() {
   this.logText = ''
 
   this.log = (text) => {
-    this.logText += `${text}\n`
+    this.logText += `${text}\n\n`
   }
 
   this.getLog = () => this.logText
@@ -50,12 +50,13 @@ module.exports = async function (params, context) {
 
   const logger = new Logger()
   const { log } = logger
-  const cmd = (line) => log(line.stderr || line.stdout)
+  const cmd = (line) => log(`> ${line.stderr || line.stdout}`)
   let errorFlag = false
 
   new Promise((rs) => setTimeout(rs, 1))
     .then(() => {
-      const { git, path, envName, envValue } = queryResult[0]
+      const { git, path, envName, envValue, buildCmd, installCmd, outputDir } =
+        queryResult[0]
       const workRootPath = shell.exec('pwd').stdout
       log(`当前路径: ${workRootPath}`)
       log('拉取项目至 ./tmp')
@@ -64,7 +65,7 @@ module.exports = async function (params, context) {
       log('代码拉取完成，进入tmp目录并安装依赖')
       shell.cd('./tmp')
       cmd(shell.exec('pwd'))
-      cmd(shell.exec('pnpm i'))
+      cmd(shell.exec(installCmd))
 
       log('依赖安装完成，创建env文件')
       cmd(shell.exec(`touch ${envName}`))
@@ -76,6 +77,11 @@ module.exports = async function (params, context) {
       )
       log(`生成ENV文件内容: \n${envString}`)
       cmd(shell.exec(`echo "${envString}" >> ${envName}`))
+
+      log('开始打包')
+      cmd(shell.exec(buildCmd))
+
+      log('打包完成')
 
       shell.cd(workRootPath)
     })
