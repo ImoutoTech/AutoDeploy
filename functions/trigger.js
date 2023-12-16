@@ -118,7 +118,7 @@ module.exports = async function (params, context) {
       console.log(`${project}构建任务完成`)
     })
 
-  await sendNotice(`${project}开始构建`, '请耐心等待', '')
+  sendNotice(`${project}开始构建`, '请耐心等待', '')
   return {
     msg: 'done',
   }
