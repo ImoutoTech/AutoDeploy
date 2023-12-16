@@ -55,8 +55,15 @@ module.exports = async function (params, context) {
 
   new Promise((rs) => setTimeout(rs, 1))
     .then(() => {
-      const { git, path, envName, envValue, buildCmd, installCmd, outputDir } =
-        queryResult[0]
+      const {
+        git,
+        path: destPath,
+        envName,
+        envValue,
+        buildCmd,
+        installCmd,
+        outputDir,
+      } = queryResult[0]
       const workRootPath = shell.exec('pwd').stdout
       log(`当前路径: ${workRootPath}`)
       log('拉取项目至 ./tmp')
@@ -81,7 +88,8 @@ module.exports = async function (params, context) {
       log('开始打包')
       cmd(shell.exec(buildCmd))
 
-      log('打包完成')
+      log('打包完成，移动文件')
+      cmd(shell.cp('-R', `./${outputDir}/*`, destPath))
 
       shell.cd(workRootPath)
     })
@@ -96,6 +104,7 @@ module.exports = async function (params, context) {
       log('临时目录已清理')
 
       sendNotice(project, logger.getLog(), errorFlag ? '错误' : '成功')
+      console.log(`${project}构建任务完成`)
     })
 
   return {
