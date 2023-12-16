@@ -2,6 +2,7 @@
 const aircode = require('aircode')
 const shell = require('shelljs')
 const axios = require('axios')
+const dayjs = require('dayjs')
 require('dotenv').config()
 
 function Logger() {
@@ -52,6 +53,7 @@ module.exports = async function (params, context) {
   const { log } = logger
   const cmd = (line) => log(`> ${line.stderr || line.stdout}`)
   let errorFlag = false
+  const startTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
 
   new Promise((rs) => setTimeout(rs, 1))
     .then(() => {
@@ -102,6 +104,11 @@ module.exports = async function (params, context) {
       cmd(shell.exec('pwd'))
       cmd(shell.rm('-rf', './tmp'))
       log('临时目录已清理')
+      const endTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+
+      log(`开始时间：${startTime}`)
+      log(`结束时间: ${endTime}`)
+      log(`用时：${dayjs(endTime).diff(startTime, 's')}秒`)
 
       sendNotice(project, logger.getLog(), errorFlag ? '错误' : '成功')
       console.log(`${project}构建任务完成`)
