@@ -15,12 +15,12 @@ function Logger() {
   this.getLog = () => this.logText
 }
 
-function sendNotice(project, content, status) {
+function sendNotice(title, content, status) {
   return axios.post(
     `https://sctapi.ftqq.com/${process.env.SERVERCHAN_KEY}.send`,
     {
       channel: 9,
-      title: `项目${project}触发构建日志`,
+      title,
       short: `结果：${status}`,
       desp: content,
     },
@@ -110,10 +110,15 @@ module.exports = async function (params, context) {
       log(`结束时间: ${endTime}`)
       log(`用时：${dayjs(endTime).diff(startTime, 's')}秒`)
 
-      sendNotice(project, logger.getLog(), errorFlag ? '错误' : '成功')
+      sendNotice(
+        `项目${project}触发构建日志`,
+        logger.getLog(),
+        errorFlag ? '错误' : '成功'
+      )
       console.log(`${project}构建任务完成`)
     })
 
+  await sendNotice(`${project}开始构建`, '请耐心等待', '')
   return {
     msg: 'done',
   }
