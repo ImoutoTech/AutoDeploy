@@ -16,7 +16,7 @@ function Logger() {
 }
 
 function sendNotice(title, content, status) {
-  return axios.post(
+  axios.post(
     `https://sctapi.ftqq.com/${process.env.SERVERCHAN_KEY}.send`,
     {
       channel: 9,
@@ -54,6 +54,8 @@ module.exports = async function (params, context) {
   const cmd = (line) => log(`> ${line.stderr || line.stdout}`)
   let errorFlag = false
   const startTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+
+  sendNotice(`${project}开始构建`, '请耐心等待', '')
 
   new Promise((rs) => setTimeout(rs, 1))
     .then(() => {
@@ -118,7 +120,6 @@ module.exports = async function (params, context) {
       console.log(`${project}构建任务完成`)
     })
 
-  sendNotice(`${project}开始构建`, '请耐心等待', '')
   return {
     msg: 'done',
   }
